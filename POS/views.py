@@ -1,3 +1,8 @@
-from django.shortcuts import render
+# POS/views.py
+from django.http import HttpResponse
 
-# Create your views here.
+def index(request):
+    return HttpResponse("Welcome to the POS Home Page!")
+
+def transactions(request):
+    return HttpResponse("POS transaction history goes here.")
