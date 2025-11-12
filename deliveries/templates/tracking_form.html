@@ -1,0 +1,56 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form</title>
+</head>
+<body>
+    {% block content %}
+  <h1>Tracking Form</h1>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="form-errors">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <!-- Customer Field -->
+    <div class="form-row">
+      <label for="{{ form.customer.id_for_label }}">Customer</label>
+      {{ form.customer }}
+      {% if form.customer.errors %}
+        <div class="field-error">{{ form.customer.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Status Field -->
+    <div class="form-row">
+      <label for="{{ form.status.id_for_label }}">Status</label>
+      {{ form.status }}
+      {% if form.status.errors %}
+        <div class="field-error">{{ form.status.errors }}</div>
+      {% endif %}
+    </div>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <style>
+    .form-row { margin-bottom: 1rem; }
+    .field-error { color: #b00020; font-size: 0.9rem; }
+    .form-errors { background:#ffe6e6; padding:.6rem; margin-bottom:1rem; border-radius:4px; }
+    label { display:block; font-weight:600; margin-bottom:.25rem; }
+  </style>
+{% endblock %}
+
+</body>
+</html>
+
+

@@ -1,8 +1,13 @@
-# POS/urls.py
 from django.urls import path
 from . import views
 
+app_name = 'pos'
+
 urlpatterns = [
-    path('', views.index, name='pos_index'),
-    path('transactions/', views.transactions, name='transactions'),
+    path('cashier/', views.cashier, name='cashier'),
+    path('customers/', views.customers, name='customers'),
+    path('inventory/', views.inventory, name='inventory'),
+    path('deliveries/', views.deliveries, name='deliveries'),
+    path('payments/', views.payments, name='payments'),
+    path('reports/', views.reports, name='reports'),
 ]
