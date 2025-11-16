@@ -32,7 +32,7 @@ def login_user(request):
 
         if user is not None:
             login(request, user)  
-            return redirect('login')
-        else:
             return redirect('pos:customers')
+        else:
+            return redirect('login')
     return render(request, 'login.html')
