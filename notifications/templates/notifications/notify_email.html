@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Notifications</title>
+</head>
+<body>
+    <h1>Notifications Page</h1>
+
+    <script>
+        const socket = new WebSocket("ws://" + window.location.host + "/ws/notifications/");
+
+        socket.onopen = () => console.log("WebSocket connected!");
+        socket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            alert("🔔 " + data.title + ": " + data.message);
+        };
+        socket.onclose = () => console.log("WebSocket disconnected");
+    </script>
+</body>
+</html>

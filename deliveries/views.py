@@ -5,7 +5,8 @@ from .models import Delivery
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 def index(request):
     return HttpResponse("Welcome to the Deliveries Home Page!")
@@ -39,9 +40,18 @@ def delivery_list(request):
 def tracking_form(request):
     """Handle form submission"""
     if request.method == 'POST':
+        channel_layer = get_channel_layer()
         form = TrackForm(request.POST)
         if form.is_valid():
             form.save()  # or assign to `status` if needed
+            async_to_sync(channel_layer.group_send)(
+                "admin_group",  # Only notify admin team
+            {
+            "type": "send_notification",
+            "title": "Delivery Update",
+            "message": "Order has been delivered!",
+            }
+    )
             return redirect('tracking_success')  
     else:
         form = TrackForm()
