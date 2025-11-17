@@ -33,8 +33,6 @@
 </nav>
 <div class="container">
   {% block content %}
-    <p>Staff/Admin check: {{ request.user|has_group:"staff,admin" }}</p>
-    <p>Admin check: {{ request.user|has_group:"admin" }}</p>
 
   {% endblock %}
 </div>
