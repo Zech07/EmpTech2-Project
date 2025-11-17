@@ -1,16 +1,195 @@
-"""
-{% extends 'pos/base.html' %}
-{% block content %}
-<h1>Inventory</h1>
-<table class="table">
-  <thead><tr><th>Product</th><th>Quantity</th><th>Low threshold</th></tr></thead>
-  <tbody>
-    {% for item in items %}
-    <tr><td>{{ item.product.name }}</td><td>{{ item.quantity }}</td><td>{{ item.low_threshold }}</td></tr>
-    {% empty %}
-    <tr><td colspan="3">No inventory items.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% endblock %}
-"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 20px;
+    }
+    h2, h3, p {
+      margin: 0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .grid {
+      display: grid;
+      gap: 20px;
+    }
+    .grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .card {
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border: 1px solid #e5e7eb;
+      background: #fff;
+    }
+    .card-gradient-blue { background: linear-gradient(to bottom right, #eff6ff, #dbeafe); border-color: #bfdbfe; }
+    .card-gradient-green { background: linear-gradient(to bottom right, #ecfdf5, #d1fae5); border-color: #86efac; }
+    .card-gradient-red { background: linear-gradient(to bottom right, #fef2f2, #fee2e2); border-color: #fca5a5; }
+    .card-gradient-purple { background: linear-gradient(to bottom right, #f5f3ff, #ede9fe); border-color: #c4b5fd; }
+    .flex { display: flex; align-items: center; justify-content: space-between; }
+    .text-blue-900 { color: #1e3a8a; }
+    .text-green-900 { color: #065f46; }
+    .text-red-900 { color: #b91c1c; }
+    .text-purple-900 { color: #5b21b6; }
+    .text-xs { font-size: 0.75rem; }
+    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; border: 1px solid; }
+    .badge-red { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+    .badge-yellow { background: #fef9c3; color: #b45309; border-color: #fde68a; }
+    .badge-green { background: #dcfce7; color: #166534; border-color: #86efac; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+    }
+    .text-gray-600 { color: #4b5563; }
+    .text-red-600 { color: #dc2626; }
+    .button { padding: 6px 12px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.875rem; }
+    .button-red { background: #dc2626; color: #fff; }
+    .button-blue { background: #2563eb; color: #fff; }
+    .button-outline { background: transparent; border: 1px solid #2563eb; color: #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Stats -->
+    <div class="grid grid-4">
+      <div class="card card-gradient-blue">
+        <div class="flex">
+          <div>
+            <p class="text-blue-700 text-xs">Total Products</p>
+            <p class="text-blue-900">8</p>
+          </div>
+          <div>📦</div>
+        </div>
+      </div>
+      <div class="card card-gradient-green">
+        <div class="flex">
+          <div>
+            <p class="text-green-700 text-xs">Total Items</p>
+            <p class="text-green-900">896</p>
+          </div>
+          <div>🗄️</div>
+        </div>
+      </div>
+      <div class="card card-gradient-red">
+        <div class="flex">
+          <div>
+            <p class="text-red-700 text-xs">Low Stock Items</p>
+            <p class="text-red-900">2</p>
+          </div>
+          <div>⚠️</div>
+        </div>
+      </div>
+      <div class="card card-gradient-purple">
+        <div class="flex">
+          <div>
+            <p class="text-purple-700 text-xs">Total Value</p>
+            <p class="text-purple-900">$4,607.40</p>
+          </div>
+          <div>📈</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    <div class="card" style="border-color:#fca5a5; background:#fee2e2; margin-top:20px;">
+      <h3 style="color:#b91c1c; margin-bottom:12px;">⚠️ Low Stock Alerts</h3>
+      <div class="flex" style="justify-content: space-between; margin-bottom:8px; background:#fff; padding:8px; border-radius:6px; border:1px solid #fca5a5;">
+        <div>
+          <p>Water Dispenser (Cold Only)</p>
+          <p class="text-xs text-gray-600">Current: 8 | Min: 10</p>
+        </div>
+        <button class="button button-red">Reorder Now</button>
+      </div>
+      <div class="flex" style="justify-content: space-between; background:#fff; padding:8px; border-radius:6px; border:1px solid #fca5a5;">
+        <div>
+          <p>Bottle Caps (Pack of 50)</p>
+          <p class="text-xs text-gray-600">Current: 25 | Min: 30</p>
+        </div>
+        <button class="button button-red">Reorder Now</button>
+      </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="card" style="margin-top:20px;">
+      <div class="flex" style="justify-content: space-between; margin-bottom:12px;">
+        <h3>Inventory Management</h3>
+        <button class="button button-blue">Add New Product</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Category</th>
+            <th>SKU</th>
+            <th>Stock</th>
+            <th>Min/Max</th>
+            <th>Status</th>
+            <th>Unit Price</th>
+            <th>Supplier</th>
+            <th>Last Restocked</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>5 Gallon Water Bottle</td>
+            <td>Water Bottles</td>
+            <td class="text-gray-600">WB-5GAL</td>
+            <td>245</td>
+            <td class="text-gray-600">50 / 500</td>
+            <td><span class="badge badge-green">In Stock</span></td>
+            <td>$8.99</td>
+            <td class="text-gray-600">AquaSource Inc.</td>
+            <td class="text-gray-600">2024-11-14</td>
+            <td>
+              <button class="button button-outline">Edit</button>
+              <button class="button button-blue">Restock</button>
+            </td>
+          </tr>
+          <tr>
+            <td>3 Gallon Water Bottle</td>
+            <td>Water Bottles</td>
+            <td class="text-gray-600">WB-3GAL</td>
+            <td>180</td>
+            <td class="text-gray-600">40 / 300</td>
+            <td><span class="badge badge-green">In Stock</span></td>
+            <td>$5.99</td>
+            <td class="text-gray-600">AquaSource Inc.</td>
+            <td class="text-gray-600">2024-11-13</td>
+            <td>
+              <button class="button button-outline">Edit</button>
+              <button class="button button-blue">Restock</button>
+            </td>
+          </tr>
+          <!-- Repeat rows as needed for remaining items -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</body>
+</html>

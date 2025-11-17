@@ -1,20 +1,170 @@
-"""
-{% extends 'pos/base.html' %}
-{% block content %}
-<h1>Reports</h1>
-<div class="mb-3">
-  <h4>Sales Today</h4>
-  <p>{{ sales_today.total|default:"0.00" }}</p>
+<div id="reports-root" class="space-y-6">
+
+  <!-- Header -->
+  <div>
+    <h2 class="text-gray-900 mb-2">Reports</h2>
+  </div>
+
+  <!-- Sales Today -->
+  <div>
+    <h3 class="text-gray-700 mb-3">Sales Today</h3>
+    <div class="card bg-gradient-to-br from-green-50 to-green-100 border-green-200 p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-green-700 text-sm mb-1">Total Revenue</p>
+          <p class="text-green-900 text-3xl">$206</p>
+          <p class="text-green-600 text-xs mt-2 flex items-center gap-1">
+            ▲ +12% from yesterday
+          </p>
+        </div>
+        <div class="text-green-600 text-4xl">💲</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card border-blue-200 p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-gray-600 text-xs mb-1">Orders Today</p>
+          <p class="text-gray-900 text-xl">24</p>
+        </div>
+        <div class="text-blue-600 text-2xl">🛒</div>
+      </div>
+    </div>
+
+    <div class="card border-purple-200 p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-gray-600 text-xs mb-1">Active Customers</p>
+          <p class="text-gray-900 text-xl">156</p>
+        </div>
+        <div class="text-purple-600 text-2xl">👥</div>
+      </div>
+    </div>
+
+    <div class="card border-orange-200 p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-gray-600 text-xs mb-1">Avg Order Value</p>
+          <p class="text-gray-900 text-xl">$8.58</p>
+        </div>
+        <div class="text-orange-600 text-2xl">▲</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Low Stock -->
+  <div>
+    <h3 class="text-gray-700 mb-3">Low Stock</h3>
+    <div class="card p-6">
+      <div class="flex items-center gap-3 text-gray-500">
+        📦
+        <p>No low stock items</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Weekly Sales Chart -->
+    <div class="card p-4">
+      <h4 class="text-gray-900 mb-2">Weekly Sales</h4>
+      <canvas id="weeklySalesChart" height="250"></canvas>
+    </div>
+
+    <!-- Top Products Chart -->
+    <div class="card p-4">
+      <h4 class="text-gray-900 mb-2">Top Products</h4>
+      <canvas id="topProductsChart" height="250"></canvas>
+    </div>
+  </div>
+
 </div>
-<div>
-  <h4>Low Stock</h4>
-  <ul>
-    {% for it in low_stock %}
-      <li>{{ it.product.name }} - {{ it.quantity }}</li>
-    {% empty %}
-      <li>No low stock items.</li>
-    {% endfor %}
-  </ul>
-</div>
-{% endblock %}
-"""
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const salesData = [
+    { name: "Mon", sales: 1200 },
+    { name: "Tue", sales: 1900 },
+    { name: "Wed", sales: 1500 },
+    { name: "Thu", sales: 2100 },
+    { name: "Fri", sales: 2400 },
+    { name: "Sat", sales: 1800 },
+    { name: "Sun", sales: 1600 },
+  ];
+
+  const productData = [
+    { name: "5 Gallon", sales: 45 },
+    { name: "1 Gallon", sales: 32 },
+    { name: "6-Pack", sales: 28 },
+    { name: "12-Pack", sales: 15 },
+  ];
+
+  const weeklyCtx = document.getElementById('weeklySalesChart').getContext('2d');
+  new Chart(weeklyCtx, {
+    type: 'line',
+    data: {
+      labels: salesData.map(item => item.name),
+      datasets: [{
+        label: 'Sales',
+        data: salesData.map(item => item.sales),
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37, 99, 235, 0.2)',
+        tension: 0.4,
+        pointBackgroundColor: '#2563eb',
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          backgroundColor: 'white',
+          borderColor: '#e5e7eb',
+          borderWidth: 1,
+          cornerRadius: 6,
+          titleColor: '#000',
+          bodyColor: '#000'
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#6b7280' }, grid: { color: '#e5e7eb' } },
+        y: { ticks: { color: '#6b7280' }, grid: { color: '#e5e7eb' } }
+      }
+    }
+  });
+
+  const topCtx = document.getElementById('topProductsChart').getContext('2d');
+  new Chart(topCtx, {
+    type: 'bar',
+    data: {
+      labels: productData.map(item => item.name),
+      datasets: [{
+        label: 'Sales',
+        data: productData.map(item => item.sales),
+        backgroundColor: '#10b981',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          backgroundColor: 'white',
+          borderColor: '#e5e7eb',
+          borderWidth: 1,
+          cornerRadius: 6,
+          titleColor: '#000',
+          bodyColor: '#000'
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#6b7280' }, grid: { color: '#e5e7eb' } },
+        y: { ticks: { color: '#6b7280' }, grid: { color: '#e5e7eb' } }
+      }
+    }
+  });
+</script>
