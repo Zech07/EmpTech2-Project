@@ -39,12 +39,6 @@ def login_user(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-<<<<<<< HEAD
-            login(request, user)  
-            return redirect('pos:customers')
-        else:
-            return redirect('login')
-=======
             login(request, user)
             if user.groups.filter(name='admin').exists():
                 return redirect('pos:reports')
@@ -56,7 +50,6 @@ def login_user(request):
                 return redirect('pos:customers')
         else:
             return HttpResponse("Invalid credentials. Please try again.")
->>>>>>> e1a048011e5a12d73720e9941e1b85ef3bc498a8
     return render(request, 'login.html')
 
 
