@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 
 class Customer(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, default=None, null=True, blank=True)
     name = models.CharField(max_length=200)
     phone = models.CharField(max_length=50, blank=True)
     address = models.TextField(blank=True)
@@ -94,3 +94,22 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.method} {self.amount} on Order #{self.order.id}"
+
+class Staff(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    full_name = models.CharField(max_length=200)
+    phone = models.CharField(max_length=50, blank=True)
+    position = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.full_name} ({self.position})"
+    
+class Admin(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    full_name = models.CharField(max_length=200)
+    phone = models.CharField(max_length=50, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.full_name} (Admin)"

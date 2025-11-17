@@ -4,18 +4,18 @@ from .forms import TrackForm
 from .models import Delivery
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import user_passes_test
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-
-def index(request):
-    return HttpResponse("Welcome to the Deliveries Home Page!")
 
 from django.shortcuts import render
 from .models import Delivery
 
 
-@login_required
+def if_driver(user):
+    return user.groups.filter(name='driver').exists()
+
+@user_passes_test(if_driver)
 def delivery_list(request):
     all_deliveries = Delivery.objects.all().order_by('-date')
 

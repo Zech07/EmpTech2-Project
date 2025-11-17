@@ -1,4 +1,5 @@
 
+{% load group_filters %}
 <!doctype html>
 <html>
 <head>
@@ -9,23 +10,33 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
   <div class="container-fluid">
     <a class="navbar-brand" href="/">Water POS</a>
     <div class="collapse navbar-collapse">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link" href="/pos/cashier/">Cashier</a></li>
-        <li class="nav-item"><a class="nav-link" href="/pos/customers/">Customers</a></li>
-        <li class="nav-item"><a class="nav-link" href="/pos/inventory/">Inventory</a></li>
-        <li class="nav-item"><a class="nav-link" href="/pos/deliveries/">Deliveries</a></li>
-        <li class="nav-item"><a class="nav-link" href="/pos/payments/">Payments</a></li>
-        <li class="nav-item"><a class="nav-link" href="/pos/reports/">Reports</a></li>
+        {% if request.user|has_group:"staff,admin" %}
+          <li class="nav-item"><a class="nav-link" href="/pos/cashier/">Cashier</a></li>
+          <li class="nav-item"><a class="nav-link" href="/pos/customers/">Customers</a></li>
+          <li class="nav-item"><a class="nav-link" href="/pos/inventory/">Inventory</a></li>
+          <li class="nav-item"><a class="nav-link" href="/pos/deliveries/">Deliveries</a></li>
+        {% endif %}
+
+        {% if request.user|has_group:"admin" %}
+          <li class="nav-item"><a class="nav-link" href="/pos/payments/">Payments</a></li>
+          <li class="nav-item"><a class="nav-link" href="/pos/reports/">Reports</a></li>
+        {% endif %}
       </ul>
     </div>
   </div>
 </nav>
 <div class="container">
-  {% block content %}{% endblock %}
+  {% block content %}
+    <p>Staff/Admin check: {{ request.user|has_group:"staff,admin" }}</p>
+    <p>Admin check: {{ request.user|has_group:"admin" }}</p>
+
+  {% endblock %}
 </div>
 </body>
 </html>
