@@ -15,7 +15,7 @@ from .models import Delivery
 def if_driver(user):
     return user.groups.filter(name='driver').exists()
 
-@user_passes_test(if_driver)
+@user_passes_test(if_driver , login_url='/')
 def delivery_list(request):
     all_deliveries = Delivery.objects.all().order_by('-date')
 
