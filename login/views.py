@@ -67,33 +67,30 @@ def login_user(request):
 def create_role_profile(sender, instance, created, **kwargs):
     if not created:
         return
-    # Safely check if the user has a group
+
+    # Define the roles and their corresponding models
+    role_model_map = {
+        "customer": Customer,
+        "driver": Driver,
+        "staff": Staff,
+        "admin": Admin,
+    }
+
+    # Get the first group of the user, if any
     group = instance.groups.first()
+    
     if group is None:
-        return  # no role assigned → skip
+        # If no group assigned, create default groups if they don't exist
+        for role_name in role_model_map.keys():
+            Group.objects.get_or_create(name=role_name)
+        return  # You may want to skip profile creation until a group is assigned
 
     role = group.name.lower()
 
-    if role == "customer":
-        Customer.objects.get_or_create(
-            user=instance,
-            defaults={"name": instance.username}
-        )
-
-    elif role == "driver":
-        Driver.objects.get_or_create(
-            user=instance,
-            defaults={"full_name": instance.username}
-        )
-
-    elif role == "staff":
-        Staff.objects.get_or_create(
-            user=instance,
-            defaults={"full_name": instance.username}
-        )
-
-    elif role == "admin":
-        Admin.objects.get_or_create(
-            user=instance,
-            defaults={"full_name": instance.username}
-        )
+    # Create the corresponding profile model
+    model_class = role_model_map.get(role)
+    if model_class:
+        if role == "customer":
+            model_class.objects.get_or_create(user=instance, defaults={"name": instance.username})
+        else:  # driver, staff, admin
+            model_class.objects.get_or_create(user=instance, defaults={"full_name": instance.username})
