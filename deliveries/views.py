@@ -2,7 +2,6 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from .forms import TrackForm
 from .models import Delivery
-from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test
 from channels.layers import get_channel_layer

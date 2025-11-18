@@ -6,11 +6,11 @@ from django.db.models import Sum, F
 from django.contrib.auth.decorators import user_passes_test
 
 def if_staff(user):
-    return user.groups.filter(name='staff').exists()
+    return user.groups.filter(name__in=['staff', 'admin']).exists()
+def is_customer_or_staff(user):
+    return user.groups.filter(name__in=['customer', 'staff']).exists()
 
 
-def if_customer(user):
-    return user.groups.filter(name='customer').exists()
 
 def if_admin(user):
     return user.groups.filter(name='admin').exists()
@@ -20,7 +20,7 @@ def cashier(request):
     products = Product.objects.all()
     return render(request, 'pos/cashier.html', {'products': products})
 
-@user_passes_test(if_customer, login_url='/')
+@user_passes_test(if_staff, login_url='/')
 def customers(request):
     customers = Customer.objects.all()
     return render(request, 'pos/customers.html', {'customers': customers})
@@ -36,12 +36,12 @@ def deliveries(request):
     drivers = Driver.objects.all()
     return render(request, 'pos/deliveries.html', {'deliveries': deliveries, 'drivers': drivers})
 
-@user_passes_test(if_staff , login_url='/')
+@user_passes_test(if_admin , login_url='/')
 def payments(request):
     payments = Payment.objects.select_related('order').all()
     return render(request, 'pos/payments.html', {'payments': payments})
 
-@user_passes_test(if_staff , login_url='/') 
+@user_passes_test(if_admin , login_url='/') 
 def reports(request):
     sales_today = Order.objects.filter(created_at__date=timezone.now().date()).aggregate(total=Sum('total'))
     low_stock = Inventory.objects.filter(quantity__lte=F('low_threshold')).select_related('product')

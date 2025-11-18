@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'pos',
     'login',
     'channels',
+    'customer',
 ]
 
 MIDDLEWARE = [
