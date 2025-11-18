@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'notifications',
     'pos',
     'login',
-    'customer',
     'customer.apps.CustomerConfig',
 
     # Channels
@@ -73,9 +72,7 @@ TEMPLATES = [
 ]
 
 # Database
-DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}"))
-}
+DATABASES = { 'default': dj_database_url.config(default=os.environ.get('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}")) }
 
 # Channels / Redis
 CHANNEL_LAYERS = {
