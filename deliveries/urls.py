@@ -4,7 +4,5 @@ app_name = 'deliveries'
 
 urlpatterns = [
     path('delivery_list/', views.delivery_list, name='delivery_list'),
-    path('form/', views.tracking_form, name='tracking_form'),
-    path('form_success/', views.tracking_success, name='tracking_success'),
-
+    path('update/', views.update_delivery, name='update_delivery'),
 ]

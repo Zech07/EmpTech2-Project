@@ -17,7 +17,7 @@ sys.path.append(os.path.dirname(BASE_DIR))
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key")
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+DEBUG = "False"
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 
 # ASGI (Channels)
@@ -74,15 +74,6 @@ TEMPLATES = [
 # Database
 DATABASES = { 'default': dj_database_url.config(default=os.environ.get('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}")) }
 
-# Channels / Redis
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [os.environ.get("REDIS_URL", "redis://localhost:6379")],
-        },
-    },
-}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

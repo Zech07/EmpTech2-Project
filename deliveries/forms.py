@@ -1,7 +1,11 @@
-from . import models
+# deliveries/forms.py
 from django import forms
+from .models import Delivery
 
-class TrackForm(forms.ModelForm):
+class DeliveryStatusForm(forms.ModelForm):
     class Meta:
-        model = models.Delivery
-        fields = ['customer','status' ]
+        model = Delivery
+        fields = ['status']
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-select'})
+        }

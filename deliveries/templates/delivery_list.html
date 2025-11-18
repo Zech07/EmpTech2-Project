@@ -48,18 +48,12 @@
   {% endif %}
   </div>
 
-  {% endblock %}
 
-<ul>
-  <li>
-     <a href="{% url 'deliveries:tracking_form' %}"> Update </a>
-  </li>
- 
-  <li>
-      <a href="{% url 'deliveries:delivery_list' %}"> Delivery_list </a>
-  </li>
-</ul>
-  
-  
+  <form method="post" action="{% url 'deliveries:update_delivery' %}">
+    {% csrf_token %}
+    <input type="hidden" name="order_id" value="{{ delivery.order.id }}">
+    <button type="submit">Update</button>
+  </form>
+  {% endblock %}
 </body>
 </html>

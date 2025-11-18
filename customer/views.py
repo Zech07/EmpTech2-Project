@@ -1,41 +1,72 @@
+# customers/views.py
 from django.shortcuts import render, redirect
-from pos.models import Customer
 from django.contrib.auth.decorators import user_passes_test
-from .forms import OrderForm
+from pos.models import Customer, Order, OrderItem, Product
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-# Create your views here.
 
+
+# Check if the user is in the 'customer' group
 def if_customer(user):
     return user.groups.filter(name='customer').exists()
 
-
-@user_passes_test( if_customer, login_url='/')
 def customer(request):
+    """
+    Display the logged-in customer's profile along with their CustomerProfile details.
+    """
+    # Get the Customer instance for the logged-in user
+    customer_instance = Customer.objects.get(user=request.user)
 
-    customer = request.user
-    return render(request, 'customer.html', {'customer': customer})
+    context = {
+        'customer': customer_instance
+    }
+    return render(request, 'customer.html', context)
 
 
+
+# Check if user is a customer
+def if_customer(user):
+    return user.groups.filter(name='customer').exists()
+
+@user_passes_test(if_customer, login_url='/')
 def order(request):
-    """Handle form submission"""
-    if request.method == 'POST':
-        channel_layer = get_channel_layer()
-        form = OrderForm(request.POST)
-        if form.is_valid():
-            order_instance = form.save(commit=False)  # don't save yet
-            order_instance.user = request.user.customerprofile  # assign the logged-in customer
-            order_instance.save()  # now save
-            async_to_sync(channel_layer.group_send)(
-                "staff_admin_group",  # Only notify admin team
-                {
-                    "type": "send_notification",
-                    "title": "Delivery Update",
-                    "message": "Order has been delivered!",
-                }
-            )
-            return redirect('customer:profile')  
-    else:
-        form = OrderForm()
+    """Create a new order for the logged-in customer with selected products"""
+    customer_instance = Customer.objects.get(user=request.user)
+    products = Product.objects.all()  # For product selection
 
-    return render(request, 'order.html', {'form': form})
+    if request.method == 'POST':
+        # Example: expecting POST data like {'product_id': 1, 'quantity': 2}
+        product_id = request.POST.get('product_id')
+        quantity = int(request.POST.get('quantity', 1))
+
+        product = Product.objects.get(id=product_id)
+
+        # Create Order
+        order_instance = Order.objects.create(customer=customer_instance, total=0)
+
+        # Create OrderItem
+        order_item = OrderItem.objects.create(
+            order=order_instance,
+            product=product,
+            quantity=quantity,
+            unit_price=product.price  # assuming Product has a price field
+        )
+
+        # Update total
+        order_instance.total = order_item.line_total()
+        order_instance.save()
+
+        # Optional: notify staff/admin
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "staff_admin_group",
+            {
+                "type": "send_notification",
+                "title": "New Order",
+                "message": f"Customer {request.user.username} placed a new order!",
+            }
+        )
+
+        return redirect('customer:profile')
+
+    return render(request, 'customer/order.html', {'products': products})

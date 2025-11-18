@@ -1,7 +1,7 @@
-from . import models
+from pos.models import OrderItem
 from django import forms
 
 class OrderForm(forms.ModelForm):
     class Meta:
-        model = models.CustomerProfile
-        fields = ['phone_number', 'address', 'jug_id']
+        model = OrderItem
+        fields = ['quantity']

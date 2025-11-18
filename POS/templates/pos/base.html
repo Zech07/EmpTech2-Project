@@ -30,12 +30,11 @@
         {% if request.user|has_group:"staff,admin" %}
           <li class="nav-item"><a class="nav-link" href="/pos/cashier/">Cashier</a></li>
           <li class="nav-item"><a class="nav-link" href="/pos/customers/">Customers</a></li>
-          <li class="nav-item"><a class="nav-link" href="/pos/inventory/">Inventory</a></li>
           <li class="nav-item"><a class="nav-link" href="/pos/deliveries/">Deliveries</a></li>
+          <li class="nav-item"><a class="nav-link" href="/pos/order_table/">Order Table</a></li>
         {% endif %}
 
         {% if request.user|has_group:"admin" %}
-          <li class="nav-item"><a class="nav-link" href="/pos/payments/">Payments</a></li>
           <li class="nav-item"><a class="nav-link" href="/pos/reports/">Reports</a></li>
         {% endif %}
       </ul>
@@ -84,10 +83,14 @@ $(document).ready(function() {
         }
 
         // Optional: handle other types, e.g., orders
-        if (data.type === 'order_update') {
-            $('#orders-count').text(data.orders_count);
-        }
-    };
+        if (data.type === 'delivery_update') {
+    // Update delivery status for a specific order
+    // data.order_id = the order being updated
+    // data.delivery_status = new status string
+          $('#delivery_status-' + data.order_id).text(
+          data.delivery_status.charAt(0).toUpperCase() + data.delivery_status.slice(1)
+    );
+}
 
     socket.onopen = function(e) {
         console.log("WebSocket connected");

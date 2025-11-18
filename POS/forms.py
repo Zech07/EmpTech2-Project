@@ -1,7 +1,8 @@
-from . import models
 from django import forms
+from .models import Delivery
 
 class TrackForm(forms.ModelForm):
     class Meta:
-        model = models.Delivery
-        fields = ['customer','status' ]
+        model = Delivery
+        # Only include fields that actually exist in Delivery
+        fields = ['order', 'status']  # 'order' links to the customer/order

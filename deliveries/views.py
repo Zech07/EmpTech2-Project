@@ -1,89 +1,88 @@
-from django.http import HttpResponse
-from django.shortcuts import render, redirect
-from .forms import TrackForm
-from .models import Delivery
-from django.contrib.auth.models import User
+# deliveries/views.py
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import user_passes_test
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from .models import Delivery
+from .forms import DeliveryStatusForm
+
+def if_staff(user):
+    return user.groups.filter(name__in=['staff', 'admin']).exists()
 
 from django.shortcuts import render
+from django.contrib.auth.decorators import user_passes_test
 from .models import Delivery
-
 
 def if_driver(user):
     return user.groups.filter(name='driver').exists()
 
-@user_passes_test(if_driver , login_url='/')
+@user_passes_test(if_driver, login_url='/')
 def delivery_list(request):
-    all_deliveries = Delivery.objects.all().order_by('-date')
+    """
+    Show the latest delivery per customer, grouped by status.
+    """
 
-    unique_customers = {}
-    for d in all_deliveries:
-        if d.customer not in unique_customers:
-            unique_customers[d.customer] = d  # keep the latest one only
+    # Get all deliveries (most recent first)
+    all_deliveries = Delivery.objects.select_related('customer').order_by('-date')
 
-    # Now separate by status
-    delivered = [d for d in unique_customers.values() if d.status.lower() == "delivered"]
-    transporting = [d for d in unique_customers.values() if d.status.lower() == "transporting"]
-    picked_up = [d for d in unique_customers.values() if d.status.lower() == "picked_up"]
+    # Keep ONLY the latest delivery per customer
+    latest_by_customer = {}
+    for delivery in all_deliveries:
+        if delivery.customer_id not in latest_by_customer:
+            latest_by_customer[delivery.customer_id] = delivery
 
-    state = {
-        "delivered": delivered,
-        "transporting": transporting,
-        "picked_up": picked_up,
+    # Group deliveries by status
+    grouped = {
+        'delivered': [],
+        'transporting': [],
+        'picked_up': []
     }
-    
-    return render(request, "delivery_list.html", state)
+    for delivery in latest_by_customer.values():
+        status = delivery.status.lower()
+        if status in grouped:
+            grouped[status].append(delivery)
 
-from django.shortcuts import render, redirect
-from .forms import TrackForm
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+    return render(request, "delivery_list.html", grouped)
 
-def tracking_form(request):
-    """Handle form submission and send real-time notifications."""
-    form = TrackForm(request.POST or None)  # Handles both GET and POST
+
+@user_passes_test(if_driver, login_url='/')
+def update_delivery(request, order_id):
+    """Update the latest delivery linked to an order"""
+    order = get_object_or_404(Order, id=order_id)
+
+    # Get or create a delivery for this order
+    delivery, created = Delivery.objects.get_or_create(
+        order=order,
+        defaults={
+            'customer': order.customer,
+            'customer_name': order.customer.name if order.customer else "Walk-in",
+            'address': order.customer.address if order.customer else "",
+            'contact_number': order.customer.phone if order.customer else "",
+            'amount': order.total,
+            'status': 'transporting',
+        }
+    )
+
+    form = DeliveryStatusForm(request.POST or None, instance=delivery)
 
     if request.method == 'POST' and form.is_valid():
-        delivery = form.save()  # Save and get the instance
+        form.save()
+
+        # Optional: also update order.delivery_status
+        order.delivery_status = delivery.status
+        order.save()
+
+        # WebSocket notification
         channel_layer = get_channel_layer()
-
-        # Count deliveries by status
-        delivered_count = Delivery.objects.filter(status='delivered').count()
-        transporting_count = Delivery.objects.filter(status='transporting').count()
-        picked_up_count = Delivery.objects.filter(status='picked_up').count()
-
-        # Notify POS staff/admin group
         async_to_sync(channel_layer.group_send)(
             "staff_admin_group",
             {
-                "type": "send_notification",
-                "title": "Delivery Update",
-                "message": f"Delivery #{delivery.id} is now {delivery.status}",
-                "delivered_count": delivered_count,
-                "transporting_count": transporting_count,
-                "picked_up_count": picked_up_count
+                "type": "delivery_update",
+                "order_id": order.id,
+                "delivery_status": delivery.status,
             }
         )
 
-        # Notify the specific customer
-        customer_user_id = delivery.customer.user.id
-        async_to_sync(channel_layer.group_send)(
-            f"customer_{customer_user_id}",
-            {
-                "type": "send_notification",
-                "title": "Your Order Status",
-                "message": f"Your delivery #{delivery.id} is now {delivery.status}",
-            }
-        )
+        return redirect('orders_table')  # or wherever the table is
 
-        return redirect('tracking_success')
-
-    return render(request, 'tracking_form.html', {'form': form})
-
-
-
-def tracking_success(request):
-    return render(request, 'tracking_success.html')
-
+    return render(request, 'update_delivery.html', {'form': form, 'order': order})
