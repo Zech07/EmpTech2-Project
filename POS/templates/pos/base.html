@@ -1,4 +1,3 @@
-
 {% load group_filters %}
 <!doctype html>
 <html>
@@ -8,6 +7,16 @@
   <title>POS - Water Delivery</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    /* Notification container */
+    #notifications {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 9999;
+      width: 300px;
+    }
+  </style>
 </head>
 <body>
 
@@ -31,10 +40,54 @@
     </div>
   </div>
 </nav>
+
+<!-- Notifications container -->
+<div id="notifications"></div>
+
 <div class="container">
   {% block content %}
-
   {% endblock %}
 </div>
+
+<script>
+$(document).ready(function() {
+    {% if request.user|has_group:"staff,admin" %}
+    const socket = new WebSocket(
+        (window.location.protocol === 'https:' ? 'wss://' : 'ws://') +
+        window.location.host +
+        '/ws/pos/'
+    );
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        console.log("Notification received:", data.title, data.message);
+
+        // Create a Bootstrap alert
+        const notif = $('<div class="alert alert-info" role="alert"></div>');
+        notif.text(`${data.title}: ${data.message}`);
+        $('#notifications').append(notif);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => notif.fadeOut(500, () => notif.remove()), 5000);
+        if (data.type === 'order_update') {
+          $('#orders-count').text(data.orders_count);
+        }
+
+        if (data.type === 'delivery_update') {
+          $('#deliveries-count').text(data.deliveries_count);
+        }
+    };
+
+    socket.onopen = function(e) {
+        console.log("WebSocket connected");
+    };
+
+    socket.onclose = function(e) {
+        console.log("WebSocket disconnected");
+    };
+    {% endif %}
+});
+</script>
+
 </body>
 </html>
