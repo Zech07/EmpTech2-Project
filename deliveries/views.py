@@ -49,6 +49,11 @@ def tracking_form(request):
         delivery = form.save()  # Save and get the instance
         channel_layer = get_channel_layer()
 
+        # Count deliveries by status
+        delivered_count = Delivery.objects.filter(status='delivered').count()
+        transporting_count = Delivery.objects.filter(status='transporting').count()
+        picked_up_count = Delivery.objects.filter(status='picked_up').count()
+
         # Notify POS staff/admin group
         async_to_sync(channel_layer.group_send)(
             "staff_admin_group",
@@ -56,6 +61,9 @@ def tracking_form(request):
                 "type": "send_notification",
                 "title": "Delivery Update",
                 "message": f"Delivery #{delivery.id} is now {delivery.status}",
+                "delivered_count": delivered_count,
+                "transporting_count": transporting_count,
+                "picked_up_count": picked_up_count
             }
         )
 
@@ -73,6 +81,7 @@ def tracking_form(request):
         return redirect('tracking_success')
 
     return render(request, 'tracking_form.html', {'form': form})
+
 
 
 def tracking_success(request):

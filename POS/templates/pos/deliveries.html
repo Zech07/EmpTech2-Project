@@ -3,6 +3,16 @@
 {% block content %}
 <h2 class="page-title mb-3">Deliveries</h2>
 
+<!-- Notification and counts section -->
+<div class="mb-3">
+    <div>
+        Delivered: <span id="delivered-count">0</span><br>
+        Transporting: <span id="transporting-count">0</span><br>
+        Picked Up: <span id="picked-up-count">0</span>
+    </div>
+    <div id="notifications"></div>
+</div>
+
 <table class="table table-hover">
     <thead>
         <tr>
@@ -16,14 +26,16 @@
     <tbody>
         {% for delivery in deliveries %}
         <tr>
-            <td>{{ delivery.order.id }}</td>
-            <td>{{ delivery.order.customer.name }}</td>
-            <td>{{ delivery.driver.name if delivery.driver else "Unassigned" }}</td>
+            <td>{{ delivery.id }}</td>
+            <td>{{ delivery.customer.customer_name }}</td>
+            <td>{{ delivery.driver.full_name }}</td>
             <td>{{ delivery.status }}</td>
-            <td>{{ delivery.scheduled_at|date:"M d, Y H:i" }}</td>
+            <td>{{ delivery.date }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="5">No deliveries available.</td></tr>
+        <tr>
+            <td colspan="5">No deliveries available.</td>
+        </tr>
         {% endfor %}
     </tbody>
 </table>
