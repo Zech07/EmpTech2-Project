@@ -1,241 +1,30 @@
 {% extends 'pos/base.html' %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cashier Section</title>
-<style>
-  body {
-    font-family: sans-serif;
-    background: #f0f9ff;
-    margin: 0;
-    padding: 16px;
-  }
 
-  h2 { color: #111827; margin-bottom: 16px; }
+<h2 class="page-title mb-3">Cashier</h2>
 
-  .grid { display: grid; gap: 16px; }
-  @media(min-width:1024px) { .grid { grid-template-columns: 1fr 1fr; } }
+<!-- Product Grid -->
+<div class="product-grid">
 
-  .card {
-    background: #fff;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
+  {% for p in products %}
+  <div class="product-card">
 
-  .card-header { margin-bottom: 8px; }
-  .card-header input {
-    width: 100%;
-    padding: 6px 8px 6px 28px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-  }
-  .search-icon {
-    position: relative;
-  }
-  .search-icon::before {
-    content: "🔍";
-    position: absolute;
-    left: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
+      <div class="product-name">{{ p.name }}</div>
 
-  .product, .cart-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    margin-bottom: 4px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .product:hover { background: #f9fafb; }
+      {% if p.description %}
+      <div class="product-description">{{ p.description }}</div>
+      {% endif %}
 
-  .badge {
-    display: inline-block;
-    padding: 2px 6px;
-    font-size: 0.7rem;
-    border-radius: 4px;
-    background: #e0f2fe;
-    color: #0369a1;
-    margin-right: 4px;
-  }
+      <div class="product-price">₱{{ p.price }}</div>
 
-  .cart-controls button {
-    padding: 2px 6px;
-    margin: 0 2px;
-    border-radius: 4px;
-    border: 1px solid #d1d5db;
-    cursor: pointer;
-    background: #fff;
-  }
+      <button class="btn-primary add-to-cart-btn">Add to Cart</button>
 
-  .cart-totals {
-    margin-top: 12px;
-    border-top: 1px solid #e5e7eb;
-    padding-top: 8px;
-  }
-  .cart-totals div { display: flex; justify-content: space-between; margin-bottom: 4px; }
-  .cart-totals .total { font-weight: bold; font-size: 1.1rem; }
-
-  .btn { padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; margin-top: 4px; width: 100%; }
-  .btn-primary { background: #3b82f6; color: #fff; }
-  .btn-primary:hover { background: #2563eb; }
-  .btn-outline { background: #fff; border: 1px solid #d1d5db; }
-  .btn-outline:hover { background: #f3f4f6; }
-</style>
-</head>
-<body>
-
-<h2>Cashier</h2>
-<div class="grid">
-  <!-- Products Section -->
-  <div class="card">
-    <div class="card-header">
-      <h3>Products</h3>
-      <div class="search-icon">
-        <input type="text" id="product-search" placeholder="Search products...">
-      </div>
-    </div>
-    <div id="product-list"></div>
   </div>
+  {% empty %}
+  <p>No products available.</p>
+  {% endfor %}
 
-  <!-- Cart Section -->
-  <div class="card">
-    <div class="card-header">
-      <h3>Current Sale</h3>
-    </div>
-    <div id="cart-list">[Add products to the cart]</div>
-    <div class="cart-totals" id="cart-totals" style="display:none;">
-      <div><span>Subtotal:</span> <span id="subtotal">$0.00</span></div>
-      <div><span>Tax (8%):</span> <span id="tax">$0.00</span></div>
-      <div class="total"><span>Total:</span> <span id="grand-total">$0.00</span></div>
-    </div>
-    <button class="btn btn-primary" onclick="checkout()">Complete Payment</button>
-    <button class="btn btn-outline" onclick="clearCart()">Clear Cart</button>
-  </div>
 </div>
+
 {% endblock %}
-<script>
-const products = [
-  {id:"1",name:"5 Gallon Water Bottle",price:8.99,stock:50,category:"Bottles"},
-  {id:"2",name:"1 Gallon Water Bottle",price:3.99,stock:100,category:"Bottles"},
-  {id:"3",name:"Water 6-Pack (16.9 oz)",price:4.99,stock:75,category:"Packs"},
-  {id:"4",name:"Water 12-Pack (16.9 oz)",price:7.99,stock:60,category:"Packs"},
-  {id:"5",name:"Water Dispenser Pump",price:12.99,stock:20,category:"Accessories"},
-  {id:"6",name:"Water Dispenser Stand",price:29.99,stock:15,category:"Accessories"}
-];
-
-let cart = [];
-
-const productListEl = document.getElementById('product-list');
-const cartListEl = document.getElementById('cart-list');
-const subtotalEl = document.getElementById('subtotal');
-const taxEl = document.getElementById('tax');
-const grandTotalEl = document.getElementById('grand-total');
-const cartTotalsEl = document.getElementById('cart-totals');
-
-function renderProducts(filter="") {
-  productListEl.innerHTML = "";
-  const filtered = products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
-  if(filtered.length === 0) productListEl.innerHTML = "<p>No products available</p>";
-  filtered.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'product';
-    div.innerHTML = `
-      <div>
-        <p>${p.name}</p>
-        <div style="margin-top:4px;">
-          <span class="badge">${p.category}</span>
-          <span style="font-size:0.7rem;color:#6b7280;">Stock: ${p.stock}</span>
-        </div>
-      </div>
-      <div>$${p.price.toFixed(2)}</div>
-    `;
-    div.addEventListener('click',()=>addToCart(p));
-    productListEl.appendChild(div);
-  });
-}
-
-function renderCart() {
-  cartListEl.innerHTML = "";
-  if(cart.length === 0) {
-    cartListEl.textContent = "[Add products to the cart]";
-    cartTotalsEl.style.display = "none";
-    return;
-  }
-  cartTotalsEl.style.display = "block";
-  cart.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'cart-item';
-    div.innerHTML = `
-      <div>
-        <p style="font-size:0.9rem">${item.product.name}</p>
-        <p style="font-size:0.7rem;color:#6b7280;">$${item.product.price.toFixed(2)} each</p>
-      </div>
-      <div class="cart-controls">
-        <button onclick="updateQuantity('${item.product.id}',-1)">-</button>
-        <span>${item.quantity}</span>
-        <button onclick="updateQuantity('${item.product.id}',1)">+</button>
-        <button onclick="removeFromCart('${item.product.id}')">🗑️</button>
-      </div>
-    `;
-    cartListEl.appendChild(div);
-  });
-
-  const subtotal = cart.reduce((sum,i)=>sum+i.product.price*i.quantity,0);
-  const tax = subtotal*0.08;
-  const grandTotal = subtotal+tax;
-  subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-  taxEl.textContent = `$${tax.toFixed(2)}`;
-  grandTotalEl.textContent = `$${grandTotal.toFixed(2)}`;
-}
-
-function addToCart(product){
-  const existing = cart.find(c=>c.product.id===product.id);
-  if(existing) existing.quantity++;
-  else cart.push({product,quantity:1});
-  renderCart();
-}
-
-function updateQuantity(id,delta){
-  cart = cart.map(c=>{
-    if(c.product.id===id) return {...c,quantity:Math.max(0,c.quantity+delta)};
-    return c;
-  }).filter(c=>c.quantity>0);
-  renderCart();
-}
-
-function removeFromCart(id){
-  cart = cart.filter(c=>c.product.id!==id);
-  renderCart();
-}
-
-function clearCart(){
-  cart=[];
-  renderCart();
-}
-
-function checkout(){
-  if(cart.length===0) return alert("Cart is empty");
-  const total = cart.reduce((sum,i)=>sum+i.product.price*i.quantity,0)*1.08;
-  alert(`Payment successful! Total: $${total.toFixed(2)}`);
-  clearCart();
-}
-
-document.getElementById('product-search').addEventListener('input',(e)=>{
-  renderProducts(e.target.value);
-});
-
-renderProducts();
-renderCart();
-</script>
-
-</body>
-</html>

@@ -13,27 +13,29 @@ def if_customer(user):
 @user_passes_test( if_customer, login_url='/')
 def customer(request):
 
-    customers = Customer.objects.all()
-    return render(request, 'customer/customer.html', {'customers': customers})
+    customer = request.user
+    return render(request, 'customer.html', {'customer': customer})
 
 
-def OrderForm(request):
+def order(request):
     """Handle form submission"""
     if request.method == 'POST':
         channel_layer = get_channel_layer()
         form = OrderForm(request.POST)
         if form.is_valid():
-            form.save()  # or assign to `status` if needed
+            order_instance = form.save(commit=False)  # don't save yet
+            order_instance.user = request.user.customerprofile  # assign the logged-in customer
+            order_instance.save()  # now save
             async_to_sync(channel_layer.group_send)(
-                "staff_group",  # Only notify admin team
-            {
-            "type": "send_notification",
-            "title": "Delivery Update",
-            "message": "Order has been delivered!",
-            }
-    )
-            return redirect('tracking_success')  
+                "staff_admin_group",  # Only notify admin team
+                {
+                    "type": "send_notification",
+                    "title": "Delivery Update",
+                    "message": "Order has been delivered!",
+                }
+            )
+            return redirect('customer:profile')  
     else:
         form = OrderForm()
 
-    return render(request, 'tracking_form.html', {'form': form})
+    return render(request, 'order.html', {'form': form})

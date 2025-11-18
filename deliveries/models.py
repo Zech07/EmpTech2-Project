@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from pos.models import Delivery
+from pos.models import Customer
 
 class Delivery(models.Model):
 
@@ -10,7 +10,7 @@ class Delivery(models.Model):
         ('picked_up','Picked_up'),
     ]
 
-    customer = models.OneToOneField(Delivery, on_delete=models.CASCADE, related_name='deliveries')
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='deliveries')
     customer_name = models.CharField(max_length=100)
     address = models.TextField()
     contact_number = models.CharField(max_length=20, blank=True)

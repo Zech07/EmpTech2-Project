@@ -1,113 +1,18 @@
 {% extends 'pos/base.html' %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Customer Directory</title>
-<style>
-  body { font-family: Arial, sans-serif; background-color: #f9fafb; margin:0; padding:20px; }
-  .container { max-width: 900px; margin:0 auto; }
-  .grid { display: grid; gap: 16px; }
-  .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-  .card { background: #fff; border-radius: 8px; border: 1px solid #e5e7eb; padding: 16px; transition: box-shadow 0.2s; }
-  .card:hover { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-  h2, h3, p { margin: 0; }
-  .text-xs { font-size: 0.75rem; }
-  .text-gray-900 { color: #111827; }
-  .text-gray-600 { color: #4b5563; }
-  .text-gray-500 { color: #6b7280; }
-  .text-blue-900 { color: #1e3a8a; }
-  .text-green-900 { color: #065f46; }
-  .text-purple-900 { color: #5b21b6; }
-  .bg-blue-50 { background-color: #eff6ff; }
-  .bg-green-50 { background-color: #d1fae5; }
-  .bg-purple-50 { background-color: #ede9fe; }
-  .border-blue-200 { border-color: #bfdbfe; }
-  .border-green-200 { border-color: #bbf7d0; }
-  .border-purple-200 { border-color: #ddd6fe; }
-  .flex { display: flex; }
-  .flex-1 { flex: 1; }
-  .items-center { align-items: center; }
-  .justify-between { justify-content: space-between; }
-  .gap-2 { gap: 8px; }
-  .gap-3 { gap: 12px; }
-  .gap-4 { gap: 16px; }
-  .mb-1 { margin-bottom: 4px; }
-  .mb-2 { margin-bottom: 8px; }
-  .p-4 { padding: 16px; }
-  .rounded { border-radius: 4px; }
-  .rounded-full { border-radius: 50%; }
-  .avatar { width: 48px; height: 48px; border-radius: 50%; display:flex; align-items:center; justify-content:center; color:#fff; background: linear-gradient(135deg, #3b82f6, #06b6d4); font-weight:bold; }
-  .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; border:1px solid; }
-  .bg-green-100 { background-color:#d1fae5; color:#065f46; border-color:#bbf7d0; }
-  .bg-gray-100 { background-color:#f3f4f6; color:#374151; border-color:#d1d5db; }
-  .button { padding: 6px 12px; border-radius: 4px; border: 1px solid #2563eb; background-color:#2563eb; color:#fff; cursor:pointer; font-size:0.875rem; }
-  .button-outline { background:transparent; border:1px solid #2563eb; color:#2563eb; }
-  .text-center { text-align:center; }
-  .truncate { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .space-y-3 > * + * { margin-top: 12px; }
-  .space-y-6 > * + * { margin-top: 24px; }
-</style>
-</head>
-<body>
-<div class="container space-y-6">
+<h2 class="page-title mb-3">Customers</h2>
 
-  <!-- Stats -->
-  <div class="grid grid-cols-3 gap-4">
-    <div class="card bg-blue-50 border-blue-200 p-4">
-      <p class="text-blue-700 text-xs mb-1">Total Customers</p>
-      <p class="text-blue-900">6</p>
+<div class="customer-grid">
+    {% for customer in customers %}
+    <div class="card customer-card p-3 mb-3">
+        <h3>{{ customer.name }}</h3>
+        <p>Phone: {{ customer.phone }}</p>
+        <p>Address: {{ customer.address }}</p>
+        <p>Joined: {{ customer.created_at|date:"M d, Y" }}</p>
     </div>
-    <div class="card bg-green-50 border-green-200 p-4">
-      <p class="text-green-700 text-xs mb-1">Active Customers</p>
-      <p class="text-green-900">5</p>
-    </div>
-    <div class="card bg-purple-50 border-purple-200 p-4">
-      <p class="text-purple-700 text-xs mb-1">Total Orders</p>
-      <p class="text-purple-900">145</p>
-    </div>
-  </div>
-
-  <!-- User List -->
-  <div class="card p-4 space-y-3">
-    <!-- Example User -->
-    <div class="flex gap-4 p-4 border rounded hover:shadow-md">
-      <div class="avatar">AA</div>
-      <div class="flex-1 min-w-0">
-        <div class="flex justify-between mb-2">
-          <div>
-            <div class="flex items-center gap-2 mb-1">
-              <h3 class="text-gray-900">Customer 1</h3>
-              <span class="badge bg-green-100">active</span>
-            </div>
-            <div class="flex items-center gap-4 text-xs text-gray-500">
-              <span>24 orders</span> • <span>Last order: 2 days ago</span>
-            </div>
-          </div>
-          <button class="button-outline">⋮</button>
-        </div>
-        <div class="grid grid-cols-1 gap-2 text-gray-600">
-          <div>Email: <span class="truncate">email1@example.com</span></div>
-          <div>Phone: +1 (555) 000-0001</div>
-          <div>Address: <span class="truncate">City, State</span></div>
-          <div>Joined: Jan 15, 2024</div>
-        </div>
-        <div class="flex gap-2 mt-3">
-          <button class="button-outline flex-1">View Profile</button>
-          <button class="button-outline flex-1">Order History</button>
-          <button class="button flex-1">New Order</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Repeat similar user cards for remaining users with generic placeholders -->
-
-  </div>
+    {% empty %}
+    <p>No customers available.</p>
+    {% endfor %}
 </div>
-
-</body>
-
-</html>
 {% endblock %}

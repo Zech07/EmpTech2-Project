@@ -53,7 +53,7 @@ def login_user(request):
             elif user.groups.filter(name='driver').exists():
                 return redirect('deliveries:delivery_list')
             else:
-                return redirect('pos:customers')
+                return redirect('customer:profile')
         else:
             return HttpResponse("Invalid credentials. Please try again.")
 
