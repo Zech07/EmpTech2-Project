@@ -26,12 +26,16 @@ def register_user(request):
         group = Group.objects.get(name=role)
         user.groups.add(group)  
         user.save()  # signal will now run correctly
-        return redirect('login')
+        return redirect('login:login')
 
     
     return render(request, 'register.html')
 
-def login_user(request):    
+from django.shortcuts import redirect, render
+from django.contrib.auth import authenticate, login
+from django.http import HttpResponse
+
+def login_user(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -40,24 +44,29 @@ def login_user(request):
 
         if user is not None:
             login(request, user)
+
+            # Redirect based on group
             if user.groups.filter(name='admin').exists():
                 return redirect('pos:reports')
             elif user.groups.filter(name='staff').exists():
                 return redirect('pos:cashier')
             elif user.groups.filter(name='driver').exists():
                 return redirect('deliveries:delivery_list')
-            else:  # default to customer  
+            else:
                 return redirect('pos:customers')
         else:
             return HttpResponse("Invalid credentials. Please try again.")
+
     return render(request, 'login.html')
+
+
+
 
 
 @receiver(post_save, sender=User)
 def create_role_profile(sender, instance, created, **kwargs):
     if not created:
         return
-
     # Safely check if the user has a group
     group = instance.groups.first()
     if group is None:
