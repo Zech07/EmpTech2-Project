@@ -1,10 +1,7 @@
 """
-ASGI config for project project.
+ASGI config for project.
 
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
+Exposes the ASGI callable as a module-level variable named `application`.
 """
 
 import os
@@ -12,12 +9,21 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from django.core.asgi import get_asgi_application
 
+# Set Django settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
 
+# Import websocket routing from apps
+import pos.routing
+import deliveries.routing
+import customer.routing  # make sure the app is named 'customer'
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
-    "websocket": AuthMiddlewareStack(),
+    "websocket": AuthMiddlewareStack(
+        URLRouter(
+            pos.routing.websocket_urlpatterns +
+            deliveries.routing.websocket_urlpatterns +
+            customer.routing.websocket_urlpatterns
+        )
+    ),
 })
-
-

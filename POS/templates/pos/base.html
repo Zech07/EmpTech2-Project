@@ -1,13 +1,24 @@
-
 {% load group_filters %}
+{% load static %}
 <!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>POS - Water Delivery</title>
+  <link rel="stylesheet" href="{% static 'css/global.css' %}">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    /* Notification container */
+    #notifications {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 9999;
+      width: 300px;
+    }
+  </style>
 </head>
 <body>
 
@@ -19,24 +30,82 @@
         {% if request.user|has_group:"staff,admin" %}
           <li class="nav-item"><a class="nav-link" href="/pos/cashier/">Cashier</a></li>
           <li class="nav-item"><a class="nav-link" href="/pos/customers/">Customers</a></li>
-          <li class="nav-item"><a class="nav-link" href="/pos/inventory/">Inventory</a></li>
           <li class="nav-item"><a class="nav-link" href="/pos/deliveries/">Deliveries</a></li>
+          <li class="nav-item"><a class="nav-link" href="/pos/order_table/">Order Table</a></li>
         {% endif %}
 
         {% if request.user|has_group:"admin" %}
-          <li class="nav-item"><a class="nav-link" href="/pos/payments/">Payments</a></li>
           <li class="nav-item"><a class="nav-link" href="/pos/reports/">Reports</a></li>
         {% endif %}
       </ul>
     </div>
   </div>
 </nav>
+
+<!-- Notifications container -->
+<div id="notifications"></div>
+
 <div class="container">
   {% block content %}
-    <p>Staff/Admin check: {{ request.user|has_group:"staff,admin" }}</p>
-    <p>Admin check: {{ request.user|has_group:"admin" }}</p>
-
   {% endblock %}
 </div>
+
+<script>
+$(document).ready(function() {
+    {% if request.user|has_group:"staff,admin" %}
+    const socket = new WebSocket(
+        (window.location.protocol === 'https:' ? 'wss://' : 'ws://') +
+        window.location.host +
+        '/ws/pos/'
+    );
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        console.log("Notification received:", data.title, data.message);
+
+        // Create a Bootstrap alert
+        const notif = $('<div class="alert alert-info" role="alert"></div>');
+        notif.text(`${data.title}: ${data.message}`);
+        $('#notifications').append(notif);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => notif.fadeOut(500, () => notif.remove()), 5000);
+
+        // Update delivery counts if present
+        if ('delivered_count' in data) {
+            $('#delivered-count').text(data.delivered_count);
+        }
+        if ('transporting_count' in data) {
+            $('#transporting-count').text(data.transporting_count);
+        }
+        if ('picked_up_count' in data) {
+            $('#picked-up-count').text(data.picked_up_count);
+        }
+
+        // Optional: handle other types, e.g., orders
+        if (data.type === 'delivery_update') {
+    // Update delivery status for a specific order
+    // data.order_id = the order being updated
+    // data.delivery_status = new status string
+          $('#delivery_status-' + data.order_id).text(
+          data.delivery_status.charAt(0).toUpperCase() + data.delivery_status.slice(1)
+    );
+}
+
+    socket.onopen = function(e) {
+        console.log("WebSocket connected");
+    };
+
+    socket.onclose = function(e) {
+        console.log("WebSocket disconnected");
+    };
+    {% endif %}
+});
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
+
 </html>

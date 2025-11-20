@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+
 def home(request):
     return HttpResponse("Welcome to Water Delivery Management System!")
 
@@ -10,4 +11,5 @@ urlpatterns = [
     path('notifications/', include('notifications.urls')),  # Notifications app
     path('deliveries/', include('deliveries.urls')),        # Deliveries app
     path('pos/', include('pos.urls')),                      # POS app
+    path('customer/', include('customer.urls')),                      # customer app
 ]
