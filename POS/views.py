@@ -12,17 +12,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Helper functions for permission checks
+# Helper functions for permission checks
 def is_admin(user):
     """Check if user is admin staff"""
     try:
-        return Staff.objects.get(user=user).is_admin()
+        staff = Staff.objects.get(user=user)
+        return staff.position == 'admin'
     except Staff.DoesNotExist:
         return False
 
 def is_driver(user):
     """Check if user is driver staff"""
     try:
-        return Staff.objects.get(user=user).is_driver()
+        staff = Staff.objects.get(user=user)
+        return staff.position == 'driver'
     except Staff.DoesNotExist:
         return False
 
@@ -37,6 +40,7 @@ def is_staff(user):
 def can_edit_orders(user):
     """Check if user can edit orders (staff and admin)"""
     return is_staff(user) or is_admin(user)
+
 
 # Order Management Views
 @login_required
@@ -116,7 +120,7 @@ def order_list(request):
     except Exception as e:
         logger.error(f"Error in order_list view: {e}")
         messages.error(request, 'An error occurred while loading orders.')
-        return redirect('home')
+        return redirect('pos:home')
 
 def handle_ajax_order_update(request):
     """Handle AJAX order updates separately for cleaner code"""
@@ -167,7 +171,7 @@ def create_order(request):
                 order_date=timezone.now()
             )
             messages.success(request, f'Order #{order.id} created successfully!')
-            return redirect('order_list')
+            return redirect('pos:order_list')
         except Customer.DoesNotExist:
             messages.error(request, 'Customer not found!')
         except Exception as e:
@@ -191,7 +195,7 @@ def update_order_status(request, order_id):
         if form.is_valid():
             form.save()
             messages.success(request, f'Order #{order.id} status updated successfully!')
-            return redirect('order_list')
+            return redirect('pos:order_list')
     else:
         form = ChangeStatusForm(instance=order)
     
@@ -210,14 +214,14 @@ def customer_profile(request):
         customer = Customer.objects.get(user=request.user)
     except Customer.DoesNotExist:
         messages.error(request, 'Customer profile not found.')
-        return redirect('home')
+        return redirect('pos:home')
     
     if request.method == 'POST':
         form = UpdateCustomerForm(request.POST, instance=customer)
         if form.is_valid():
             form.save()
             messages.success(request, 'Profile updated successfully!')
-            return redirect('customer_profile')
+            return redirect('pos:customer_profile')
     else:
         form = UpdateCustomerForm(instance=customer)
     
@@ -325,7 +329,7 @@ def update_paid_status(request, order_id):
             return JsonResponse({'success': True, 'paid_status': order.paid_status})
         
         messages.success(request, f'Order #{order.id} payment status updated!')
-        return redirect('order_list')
+        return redirect('pos:order_list')
     
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
@@ -368,4 +372,4 @@ def update_order_field(request):
 @login_required
 def clear_filters(request):
     """Clear all filters and return to default order list"""
-    return redirect('order_list')
+    return redirect('pos:order_list')
