@@ -104,9 +104,15 @@
                     {% for order in orders %}
                     <tr>
                         <td><strong>#{{ order.id }}</strong></td>
-                        <td>{{ order.customer.name }}</td>
+                        <td>
+                            <!-- FIXED: Use customer's user name -->
+                            {{ order.customer.user.get_full_name|default:order.customer.user.username }}
+                        </td>
                         <td>{{ order.customer.phone|default:"-" }}</td>
-                        <td>{{ order.jug_tag|default:"-" }}</td>
+                        <td>
+                            <!-- FIXED: Access jug_tag from customer -->
+                            {{ order.customer.jug_tag|default:"-" }}
+                        </td>
                         <td>${{ order.amount }}</td>
                         <td>
                             {% if is_driver or is_admin or is_staff %}
@@ -121,7 +127,13 @@
                                 {% endfor %}
                             </select>
                             {% else %}
-                            <span class="badge bg-secondary">{{ order.get_jug_status_display }}</span>
+                            <!-- FIXED: Use direct status display -->
+                            <span class="badge 
+                                {% if order.jug_status == 'delivered' %}bg-success
+                                {% elif order.jug_status == 'picked_up' %}bg-warning
+                                {% else %}bg-secondary{% endif %}">
+                                {{ order.jug_status|title }}
+                            </span>
                             {% endif %}
                         </td>
                         <td>
@@ -141,7 +153,8 @@
                         <td>{{ order.order_date|date:"M d, Y H:i" }}</td>
                         <td>
                             {% if order.assigned_driver %}
-                                {{ order.assigned_driver.full_name }}
+                                <!-- FIXED: Use driver's user name -->
+                                {{ order.assigned_driver.user.get_full_name|default:order.assigned_driver.user.username }}
                             {% else %}
                                 <span class="text-muted">Not assigned</span>
                             {% endif %}
@@ -164,6 +177,11 @@
             <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
             <h4>No orders found</h4>
             <p class="text-muted">{% if search_query %}Try adjusting your search criteria{% else %}No orders have been created yet{% endif %}</p>
+            {% if not search_query and not jug_status_filter and not paid_status_filter %}
+            <a href="{% url 'pos:create_order' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create First Order
+            </a>
+            {% endif %}
         </div>
         {% endif %}
     </div>
@@ -175,9 +193,13 @@
 $(document).ready(function() {
     // Handle status updates via AJAX
     $('.status-select, .paid-select').change(function() {
-        const orderId = $(this).data('order-id');
-        const field = $(this).data('field');
-        const value = $(this).val();
+        const $select = $(this);
+        const orderId = $select.data('order-id');
+        const field = $select.data('field');
+        const value = $select.val();
+        
+        // Disable select during update
+        $select.prop('disabled', true);
         
         $.ajax({
             url: "{% url 'pos:update_order_field' %}",
@@ -189,17 +211,19 @@ $(document).ready(function() {
                 'csrfmiddlewaretoken': '{{ csrf_token }}'
             },
             success: function(response) {
+                $select.prop('disabled', false);
                 if (response.success) {
                     showAlert('Status updated successfully!', 'success');
                 } else {
                     showAlert('Error: ' + response.error, 'danger');
-                    // Revert the select to previous value
-                    location.reload();
+                    // Revert by reloading the page to get correct state
+                    setTimeout(() => location.reload(), 1500);
                 }
             },
             error: function() {
+                $select.prop('disabled', false);
                 showAlert('Network error occurred', 'danger');
-                location.reload();
+                setTimeout(() => location.reload(), 1500);
             }
         });
     });
