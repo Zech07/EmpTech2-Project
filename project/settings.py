@@ -34,14 +34,9 @@ INSTALLED_APPS = [
     
 
     # Custom apps
-    'deliveries',
-    'notifications',
     'pos',
     'login',
-    'customer.apps.CustomerConfig',
 
-    # Channels
-    'channels',
 ]
 
 MIDDLEWARE = [
@@ -96,5 +91,5 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Login redirect
-LOGIN_URL = 'login:login'
+LOGIN_URL = '/login/'  # Keep this
+LOGOUT_REDIRECT_URL = '/login/'

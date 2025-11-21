@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}Sales Dashboard - Water Jug POS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-chart-bar"></i> Sales Dashboard</h1>
+    <a href="{% url 'pos:order_list' %}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left"></i> Back to Orders
+    </a>
+</div>
+
+<!-- Date Filter Section -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-filter"></i> Filter Sales Data</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="date_from" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" 
+                       value="{{ date_from }}">
+            </div>
+            
+            <div class="col-md-3">
+                <label for="date_to" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" 
+                       value="{{ date_to }}">
+            </div>
+            
+            <div class="col-md-3">
+                <label for="period" class="form-label">Quick Period</label>
+                <select class="form-select" id="period" name="period">
+                    <option value="">Select period...</option>
+                    <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
+                    <option value="week" {% if period == 'week' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="month" {% if period == 'month' %}selected{% endif %}>Last 30 Days</option>
+                </select>
+            </div>
+            
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2 w-100">
+                    <i class="fas fa-chart-line"></i> Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Sales Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>${{ total_daily_sales }}</h4>
+                        <p class="mb-0">Daily Sales</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-day fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>${{ total_weekly_sales }}</h4>
+                        <p class="mb-0">Weekly Sales</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-week fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>${{ total_monthly_sales }}</h4>
+                        <p class="mb-0">Monthly Sales</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_orders }}</h4>
+                        <p class="mb-0">Total Orders</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-shopping-cart fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Data Table -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-table"></i> Daily Sales Data</h5>
+            </div>
+            <div class="card-body">
+                {% if sales_data %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Daily Sales</th>
+                                <th>Weekly Sales</th>
+                                <th>Monthly Sales</th>
+                                <th>Yearly Sales</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in sales_data %}
+                            <tr>
+                                <td>{{ sale.date|date:"M d, Y" }}</td>
+                                <td>${{ sale.daily_sales }}</td>
+                                <td>${{ sale.weekly_sales }}</td>
+                                <td>${{ sale.monthly_sales }}</td>
+                                <td>${{ sale.yearly_sales }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <h4>No sales data found</h4>
+                    <p class="text-muted">Try adjusting your date filters</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-receipt"></i> Recent Paid Orders</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                <div class="list-group">
+                    {% for order in recent_orders %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Order #{{ order.id }}</h6>
+                            <small>${{ order.amount }}</small>
+                        </div>
+                        <p class="mb-1">{{ order.customer.name }}</p>
+                        <small class="text-muted">{{ order.order_date|date:"M d, Y H:i" }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No recent paid orders.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Order Statistics -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Order Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Total Orders:</strong> {{ total_orders }}
+                </div>
+                <div class="mb-2">
+                    <strong>Paid Orders:</strong> 
+                    <span class="badge bg-success">{{ paid_orders_count }}</span>
+                </div>
+                <div class="mb-0">
+                    <strong>Unpaid Orders:</strong> 
+                    <span class="badge bg-warning">{{ unpaid_orders_count }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

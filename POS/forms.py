@@ -5,9 +5,10 @@ from django.contrib.auth.models import User
 class ChangeStatusForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['jug_status']
+        fields = ['jug_status', 'paid_status']
         widgets = {
-            'jug_status': forms.Select(attrs={'class': 'form-control'})
+            'jug_status': forms.Select(attrs={'class': 'form-control'}),
+            'paid_status': forms.Select(attrs={'class': 'form-control'})
         }
 
 class UpdateCustomerForm(forms.ModelForm):

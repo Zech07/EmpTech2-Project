@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}Orders - Water Jug POS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-list"></i> Orders</h1>
+    {% if is_admin or is_staff %}
+    <a href="{% url 'pos:create_order' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Create New Order
+    </a>
+    {% endif %}
+</div>
+
+<!-- Search and Filter Section -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-search"></i> Search & Filter Orders</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search_query }}" placeholder="Search by name, phone, jug tag...">
+            </div>
+            
+            <div class="col-md-3">
+                <label for="jug_status" class="form-label">Jug Status</label>
+                <select class="form-select" id="jug_status" name="jug_status">
+                    <option value="">All Status</option>
+                    {% for status_value, status_label in jug_status_choices %}
+                        <option value="{{ status_value }}" 
+                                {% if jug_status_filter == status_value %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="paid_status" class="form-label">Payment Status</label>
+                <select class="form-select" id="paid_status" name="paid_status">
+                    {% for value, label in paid_status_choices %}
+                        <option value="{{ value }}" 
+                                {% if paid_status_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2 w-100">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+        </form>
+        
+        {% if search_query or jug_status_filter or paid_status_filter %}
+        <div class="mt-3">
+            <small class="text-muted">Active filters:</small>
+            {% if search_query %}
+                <span class="badge bg-info me-1">Search: "{{ search_query }}"</span>
+            {% endif %}
+            {% if jug_status_filter %}
+                <span class="badge bg-info me-1">Status: {{ jug_status_filter }}</span>
+            {% endif %}
+            {% if paid_status_filter %}
+                <span class="badge bg-info me-1">Payment: {{ paid_status_filter }}</span>
+            {% endif %}
+            <a href="{% url 'pos:clear_filters' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-times"></i> Clear All
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-table"></i> Orders List</h5>
+    </div>
+    <div class="card-body">
+        {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Jug Tag</th>
+                        <th>Amount</th>
+                        <th>Jug Status</th>
+                        <th>Payment</th>
+                        <th>Order Date</th>
+                        <th>Driver</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><strong>#{{ order.id }}</strong></td>
+                        <td>{{ order.customer.name }}</td>
+                        <td>{{ order.customer.phone|default:"-" }}</td>
+                        <td>{{ order.jug_tag|default:"-" }}</td>
+                        <td>${{ order.amount }}</td>
+                        <td>
+                            {% if is_driver or is_admin or is_staff %}
+                            <select class="form-select form-select-sm status-select" 
+                                    data-order-id="{{ order.id }}" 
+                                    data-field="jug_status">
+                                {% for status_value, status_label in jug_status_choices %}
+                                    <option value="{{ status_value }}" 
+                                            {% if order.jug_status == status_value %}selected{% endif %}>
+                                        {{ status_label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ order.get_jug_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if is_driver or is_admin or is_staff %}
+                            <select class="form-select form-select-sm paid-select" 
+                                    data-order-id="{{ order.id }}" 
+                                    data-field="paid_status">
+                                <option value="true" {% if order.paid_status %}selected{% endif %}>Paid</option>
+                                <option value="false" {% if not order.paid_status %}selected{% endif %}>Unpaid</option>
+                            </select>
+                            {% else %}
+                            <span class="badge {% if order.paid_status %}bg-success{% else %}bg-warning{% endif %}">
+                                {% if order.paid_status %}Paid{% else %}Unpaid{% endif %}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ order.order_date|date:"M d, Y H:i" }}</td>
+                        <td>
+                            {% if order.assigned_driver %}
+                                {{ order.assigned_driver.full_name }}
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </td>
+                        <td class="table-actions">
+                            {% if is_driver or is_admin or is_staff %}
+                            <a href="{% url 'pos:update_order_status' order.id %}" 
+                               class="btn btn-sm btn-outline-primary" title="Update Status">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h4>No orders found</h4>
+            <p class="text-muted">{% if search_query %}Try adjusting your search criteria{% else %}No orders have been created yet{% endif %}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Handle status updates via AJAX
+    $('.status-select, .paid-select').change(function() {
+        const orderId = $(this).data('order-id');
+        const field = $(this).data('field');
+        const value = $(this).val();
+        
+        $.ajax({
+            url: "{% url 'pos:update_order_field' %}",
+            type: "POST",
+            data: {
+                'order_id': orderId,
+                'field': field,
+                'value': value,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    showAlert('Status updated successfully!', 'success');
+                } else {
+                    showAlert('Error: ' + response.error, 'danger');
+                    // Revert the select to previous value
+                    location.reload();
+                }
+            },
+            error: function() {
+                showAlert('Network error occurred', 'danger');
+                location.reload();
+            }
+        });
+    });
+    
+    function showAlert(message, type) {
+        const alert = $('<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                       message +
+                       '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                       '</div>');
+        $('.container').prepend(alert);
+        setTimeout(() => alert.alert('close'), 3000);
+    }
+});
+</script>
+{% endblock %}
